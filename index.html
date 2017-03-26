@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - OBJLoader + MTLLoader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#btn_change_bg {
+				bottom: 5%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<script src="js/three.js"></script>
+
+		<script src="js/three/loaders/DDSLoader.js"></script>
+		<script src="js/three/loaders/MTLLoader.js"></script>
+		<script src="js/three/loaders/OBJLoader.js"></script>
+
+		<script src="js/three/Detector.js"></script>
+		<script src="js/three/libs/stats.min.js"></script>
+		<script src="js/jquery.js"></script>
+		<script src="js/KeyboardState.js"></script>
+		<script src="js/OrbitControls.js"></script>
+
+		
+		<div id="canvas"></div>
+		<div>
+			<button id="btn_change_bg" >开灯</button>
+		</div>
+		<script src="js/model.js"></script>
+		<script src="js/control.js"></script>
+
+
+	</body>
+</html>

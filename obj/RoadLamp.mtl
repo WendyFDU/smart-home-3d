@@ -1,0 +1,21 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2006 Google, Inc.
+
+newmtl c98ba865_dds1
+Ka 0.000000 0.000000 0.000000
+Kd 0.450980 0.435294 0.411765
+Ks 0.330000 0.330000 0.330000
+map_Kd RoadLamp/c98ba865_dds1.png
+
+newmtl ForegroundColor
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl d246c7a7_dds1
+Ka 0.000000 0.000000 0.000000
+Kd 0.333333 0.317647 0.301961
+Ks 0.330000 0.330000 0.330000
+map_Kd RoadLamp/d246c7a7_dds1.png
+

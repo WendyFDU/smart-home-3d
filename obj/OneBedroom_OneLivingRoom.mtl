@@ -1,0 +1,95 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2006 Google, Inc.
+
+newmtl Metal_Aluminum_Anodized
+Ka 0.000000 0.000000 0.000000
+Kd 0.792157 0.819608 0.858824
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/Metal_Aluminum_Anodized.jpg
+
+newmtl Tile_Limestone_Multi
+Ka 0.000000 0.000000 0.000000
+Kd 0.780392 0.678431 0.462745
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/Tile_Limestone_Multi.jpg
+
+newmtl _LightGray_
+Ka 0.000000 0.000000 0.000000
+Kd 0.662745 0.662745 0.662745
+Ks 0.330000 0.330000 0.330000
+
+newmtl FrontColor
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl Tile_Navy
+Ka 0.000000 0.000000 0.000000
+Kd 0.168627 0.184314 0.227451
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/Tile_Navy.jpg
+
+newmtl __20
+Ka 0.000000 0.000000 0.000000
+Kd 0.874510 0.815686 0.639216
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/__20.jpg
+
+newmtl Color_B16
+Ka 0.000000 0.000000 0.000000
+Kd 0.400000 0.098039 0.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl __7
+Ka 0.000000 0.000000 0.000000
+Kd 0.517647 0.250980 0.211765
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/__7.jpg
+
+newmtl __9
+Ka 0.000000 0.000000 0.000000
+Kd 0.811765 0.549020 0.317647
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/__9.jpg
+
+newmtl __8
+Ka 0.000000 0.000000 0.000000
+Kd 0.647059 0.450980 0.329412
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/__8.jpg
+
+newmtl Wood_Bamboo_Medium
+Ka 0.000000 0.000000 0.000000
+Kd 0.694118 0.411765 0.168627
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/Wood_Bamboo_Medium.jpg
+
+newmtl Color_000
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.330000 0.330000 0.330000
+d 0.410000
+
+newmtl Wood_Cherry_Original
+Ka 0.000000 0.000000 0.000000
+Kd 0.596078 0.337255 0.164706
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/Wood_Cherry_Original.jpg
+
+newmtl __10
+Ka 0.000000 0.000000 0.000000
+Kd 0.317647 0.231373 0.270588
+Ks 0.330000 0.330000 0.330000
+map_Kd OneBedroom_OneLivingRoom/__10.jpg
+
+newmtl Color_E06
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl ForegroundColor
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.330000 0.330000 0.330000
+
