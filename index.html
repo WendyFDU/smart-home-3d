@@ -12,10 +12,8 @@
 				margin: 0px;
 				overflow: hidden;
 			}
-			#btn_change_bg {
-				bottom: 5%;
-			}
 		</style>
+		<link href="css/button.css" rel="stylesheet" type="text/css"> 
 	</head>
 
 	<body>
@@ -24,7 +22,6 @@
 		<script src="js/three/loaders/DDSLoader.js"></script>
 		<script src="js/three/loaders/MTLLoader.js"></script>
 		<script src="js/three/loaders/OBJLoader.js"></script>
-
 		<script src="js/three/Detector.js"></script>
 		<script src="js/three/libs/stats.min.js"></script>
 		<script src="js/jquery.js"></script>
@@ -33,11 +30,27 @@
 
 		
 		<div id="canvas"></div>
-		<div>
-			<button id="btn_change_bg" >开灯</button>
+		<section  class="clearfix">
+	    	<section id="content" class="light-buttons">
+	  			<div >
+		    		<a class="button lightbg-blue clearfix" id="btn_change_light" onclick="changeLight()">	<span class="button_span">开顶灯</span>
+	    			</a> 
+	    			<a class="button lightbg-pink clearfix" id="btn_change_light" onclick="changeScene()"><span class="button_span">切换场景</span>
+	    			</a> 
+	    		</div>
+	    	</section>
+		</section>
+		<!-- <div>
+			<button id="btn_change_light" onclick="changeLight()" >关顶灯</button>
 		</div>
+		<div>
+			<button id="btn_change_light" onclick="changeScene()" >切换模型</button>
+		</div> -->
+		<script src="js/hmac-sha1.js"></script>
+		<script src="js/enc-base64.js"></script>
 		<script src="js/model.js"></script>
 		<script src="js/control.js"></script>
+		
 
 
 	</body>
