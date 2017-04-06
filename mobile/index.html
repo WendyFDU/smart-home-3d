@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - OBJLoader + MTLLoader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+		<link href="css/button.css" rel="stylesheet" type="text/css"> 
+	</head>
+
+	<body>
+		<script src="js/three.js"></script>
+
+		<script src="js/three/loaders/DDSLoader.js"></script>
+		<script src="js/three/loaders/MTLLoader.js"></script>
+		<script src="js/three/loaders/OBJLoader.js"></script>
+		<script src="js/three/Detector.js"></script>
+		<script src="js/three/libs/stats.min.js"></script>
+		<script src='js/three/libs/dat.gui.min.js'></script>
+		<script src="js/jquery.js"></script>
+		<script src="js/KeyboardState.js"></script>
+		<script src="js/OrbitControls.js"></script>
+
+		
+		<div id="canvas"></div>
+		<section  class="clearfix">
+	    	<section id="content" class="light-buttons">
+	  			<div >
+		    		<!-- <a class="button lightbg-blue clearfix" id="btn_change_light" onclick="changeLight()">	<span class="button_span">开顶灯</span>
+	    			</a>  -->
+	    			<a class="button lightbg-pink clearfix" id="btn_change" onclick="changeScene()"><span class="button_span">切换场景</span>
+	    			</a> 
+	    		</div>
+	    	</section>
+		</section>
+		<!-- <div>
+			<button id="btn_change_light" onclick="changeLight()" >关顶灯</button>
+		</div>
+		<div>
+			<button id="btn_change_light" onclick="changeScene()" >切换模型</button>
+		</div> -->
+		<script src="js/hmac-sha1.js"></script>
+		<script src="js/enc-base64.js"></script>
+		<script type="text/javascript" src="cordova.js"></script>
+	     <script type="text/javascript">
+	         app.initialize();
+	     </script>
+		<script src="js/model.js"></script>
+		<script src="js/control.js"></script>
+
+
+		
+
+
+	</body>
+</html>
