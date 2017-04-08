@@ -34,22 +34,13 @@ function changeLight() {
 			roomLightStates = 0;
 		}
 	}
-	
 }
 var roomGroup;
 var groupCount = 0;
 function initRoomGroup() {
 	roomGroup = new THREE.Group();
-	// var geometry = new THREE.PlaneGeometry( 60, 25, 1, 1 );
-	// var material = new THREE.MeshBasicMaterial( {color: 0xD4D4D4, side: THREE.DoubleSide} );
-	// var plane = new THREE.Mesh( geometry, material );
-	// // plane.rotation.x = Math.PI / 2;
-	// plane.rotation.x = -45;
-	// plane.position.y = -20;
-	// roomGroup.add(plane);
 
-
-  // TEXTURES
+  // GROOUND TEXTURES 
   var textureSquares = textureLoader.load( "textures/mu.jpg" );
   textureSquares.repeat.set( 50, 50 );
   textureSquares.wrapS = textureSquares.wrapT = THREE.RepeatWrapping;
@@ -63,12 +54,13 @@ function initRoomGroup() {
     map: textureSquares
   } );
 
+  //WALL
   var textureWall = textureLoader.load( "textures/wall.jpg" );
   textureWall.repeat.set( 20, 20 );
   textureWall.wrapS = textureWall.wrapT = THREE.RepeatWrapping;
   textureWall.magFilter = THREE.NearestFilter;
   textureWall.format = THREE.RGBFormat;
-  // GROUND
+  // WALL
   var wallMaterial = new THREE.MeshPhongMaterial( {
     shininess: 80,
     color: 0xffffff,
@@ -86,22 +78,19 @@ function initRoomGroup() {
   ground2.scale.set( 1000, 1000, 1000 );
   ground2.receiveShadow = true;
   roomGroup.add( ground2 );
-
+  //WALL
   var wallLeft = new THREE.Mesh( wallGeometry, wallMaterial );
   wallLeft.position.set( -300, 0, 0 );
-  // wallLeft.rotation.y =  Math.PI / 2;
   wallLeft.scale.set( 10, 10, 10 );
   wallLeft.receiveShadow = true;
   roomGroup.add( wallLeft );
   var wallRight = new THREE.Mesh( wallGeometry, wallMaterial );
   wallRight.position.set( 200, 0, 0 );
-  // wallRight.rotation.y =  -Math.PI / 2;
   wallRight.scale.set( 10, 10, 10 );
   wallRight.receiveShadow = true;
   roomGroup.add( wallRight );
 
   addComponent(scene);
-
 }
 initRoomGroup();
 function changeScene() {
@@ -122,60 +111,53 @@ function changeScene() {
 var loader;
 function addModel (path, scale, poX, poY, poZ, roX, roY, roZ) {
 	loader.load(
-	    path,
-	    // Function when resource is loaded
-	    function ( object ) {
-  	 		object.scale.x = object.scale.y = object.scale.z = scale;
-  	 		object.position.y = poY;
-  	 		object.position.z = poZ;
-  	 		object.position.x = poX;
-  	 		object.rotation.y = roY;
-	    	roomGroup.add(object);
-	    }
-    );
-
+    path,
+    // Function when resource is loaded
+    function ( object ) {
+	 		object.scale.x = object.scale.y = object.scale.z = scale;
+	 		object.position.y = poY;
+	 		object.position.z = poZ;
+	 		object.position.x = poX;
+	 		object.rotation.y = roY;
+    	roomGroup.add(object);
+    }
+  );
 }
 function addComponent ( scene ) {
 	loader = new THREE.OBJLoader();
-   	var ambient = new THREE.AmbientLight( 0x404040 );
-   	roomGroup.add( ambient );
+ 	var ambient = new THREE.AmbientLight( 0x404040 );
+ 	roomGroup.add( ambient );
+  //LIGHTS
+  roomLight = new THREE.PointLight( 0xffaa00, 0.5, 1000);
+  roomLight.position.set( 0, 800, 100 );
+  roomGroup.add( roomLight );
+  roomGroup.add( new THREE.PointLightHelper( roomLight, 5 ) );
 
-    roomLight = new THREE.PointLight( 0xffaa00, 0.5, 1000);
-    roomLight.position.set( 0, 800, 100 );
-    roomGroup.add( roomLight );
-    roomGroup.add( new THREE.PointLightHelper( roomLight, 5 ) );
+  sunLight = new THREE.DirectionalLight( 0xffffff, 0.5);
+  sunLight.position.set( 0, 1000, 2000 );
+  // sunLight.castShadow = true;
+  roomGroup.add(sunLight);
 
-    // wallLight = new THREE.SpotLight( 0xffffff, 0.6, 550, Math.PI/3, 10);
-    // wallLight.position.set(300,500,50);
-    // wallLight.target.position.set(-230, 500, 50);
-    // wallLight.position.set( -220, 300, 50 );
-    // roomGroup.add( wallLight );
-    // roomGroup.add( new THREE.SpotLightHelper( wallLight, 30 ) );
+  //MODELS
+  var textureSofa = textureLoader.load( "textures/sofa.jpg" );
+  textureSofa.repeat.set( 6, 2 );
+  textureSofa.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
+  textureSofa.format = THREE.RGBFormat;
 
-    sunLight = new THREE.DirectionalLight( 0xffffff, 0.5);
-    sunLight.position.set( 0, 1000, 2000 );
-    // sunLight.castShadow = true;
-    roomGroup.add(sunLight);
+  var materialSofa = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureSofa } );
+  // var humiMaterial = new THREE.MeshBasicMaterial({color: 0xD1EEEE, transparent: false});
 
-    var textureSofa = textureLoader.load( "textures/sofa.jpg" );
-    textureSofa.repeat.set( 6, 2 );
-    textureSofa.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
-    textureSofa.format = THREE.RGBFormat;
+  var textureBed = textureLoader.load( "textures/bed.jpg" );
+  textureBed.repeat.set( 6, 2 );
+  textureBed.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
+  textureBed.format = THREE.RGBFormat;
+  var materialBed = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureBed } );
 
-    var materialSofa = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureSofa } );
-    // var humiMaterial = new THREE.MeshBasicMaterial({color: 0xD1EEEE, transparent: false});
-
-    var textureBed = textureLoader.load( "textures/bed.jpg" );
-    textureBed.repeat.set( 6, 2 );
-    textureBed.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
-    textureBed.format = THREE.RGBFormat;
-    var materialBed = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureBed } );
-
-    var textureHumi = textureLoader.load( "textures/jiashiqi.jpg" );
-    textureHumi.repeat.set( 6, 2 );
-    textureHumi.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
-    textureHumi.format = THREE.RGBFormat;
-    var humiMaterial = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureHumi } );
+  var textureHumi = textureLoader.load( "textures/jiashiqi.jpg" );
+  textureHumi.repeat.set( 6, 2 );
+  textureHumi.wrapS = textureSofa.wrapT = THREE.RepeatWrapping;
+  textureHumi.format = THREE.RGBFormat;
+  var humiMaterial = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureHumi } );
 
 	loadOBJ('obj/bed1.obj',materialBed, 1, -150, 0, 0, 0, Math.PI/2, 0, -1 );
 	loadOBJ('obj/mirror+chair.obj', materialSofa, 1.2, -170, 70, 150, 0, Math.PI/2, 0, -1);
@@ -220,14 +202,6 @@ function addComponent ( scene ) {
           // sunLight.shadow.camera.updateProjectionMatrix();
   });
   controlGUI.open();
-
-
-  //   temperature: 50,
-  // mois: 100,
-  // noisy: 30,
-  // light: 600,
-
-
 
 	update();
 
@@ -362,64 +336,53 @@ function addSprite() {
 	roomGeometry = new THREE.Geometry();
 	var coldSpriteGroup = new THREE.Group();
   coldSpriteGroup.name = "coldSprite";
-    var roomColdSprite = textureLoader.load( "textures/cold.png" );
-    for ( i = 0; i < 300; i ++ ) {
-        var vertex = new THREE.Vector3();
-        vertex.x = Math.random()*30+80;
-        vertex.y = Math.random()*20+150;
-        vertex.z = Math.random()*20+100;
-        roomGeometry.vertices.push( vertex );
-    }
-    parameters = [
-         [ [0.5, 0.5, 0.5], roomColdSprite, 2 ],
-    ];
-    for ( i = 0; i < parameters.length; i ++ ) {
-        color  = parameters[i][0];
-        sprite = parameters[i][1];
-        size   = parameters[i][2];
-        materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent : true } );
-        materials[i].color.setHSL( color[0], color[1], color[2] );
-        var roomColdParticles = new THREE.Points( roomGeometry, materials[i] );
-        // roomColdParticles.rotation.x = Math.random() * 6;
-        // roomColdParticles.rotation.y = Math.random() * 6;
-        // roomColdParticles.rotation.z = Math.random() * 6;
-        coldSpriteGroup.add( roomColdParticles );
-    }
-
-     // roomGroup.add(coldSpriteGroup);
-
-
-    // var time = Date.now() * 0.00005;
-    // rad = rad + temp;
-    // console.log(rad)
-    // coldSpriteGroup.rotateOnAxis(new THREE.Vector3(200,50,50), rad);
-   
-    // roomGroup.remove(coldSpriteGroup);
+  var roomColdSprite = textureLoader.load( "textures/cold.png" );
+  for ( i = 0; i < 300; i ++ ) {
+      var vertex = new THREE.Vector3();
+      vertex.x = Math.random()*30+80;
+      vertex.y = Math.random()*20+150;
+      vertex.z = Math.random()*20+100;
+      roomGeometry.vertices.push( vertex );
   }
+  parameters = [
+       [ [0.5, 0.5, 0.5], roomColdSprite, 2 ],
+  ];
+  for ( i = 0; i < parameters.length; i ++ ) {
+      color  = parameters[i][0];
+      sprite = parameters[i][1];
+      size   = parameters[i][2];
+      materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent : true } );
+      materials[i].color.setHSL( color[0], color[1], color[2] );
+      var roomColdParticles = new THREE.Points( roomGeometry, materials[i] );
+      // roomColdParticles.rotation.x = Math.random() * 6;
+      // roomColdParticles.rotation.y = Math.random() * 6;
+      // roomColdParticles.rotation.z = Math.random() * 6;
+      coldSpriteGroup.add( roomColdParticles );
+  }
+}
 
 var snowGeometry;
 function showTprt() {
-    snowGeometry = new THREE.Geometry();
-    // var snowSpriteGroup = new THREE.Group();
-    var textureLoader = new THREE.TextureLoader();
-    var snowTexture = textureLoader.load( "textures/cold.png" );
-    var range = 1000;
-    for ( i = 0; i < 3000; i ++ ) {
-        var vertex = new THREE.Vector3();
-        vertex.x = Math.random()*range-500;
-        vertex.y = Math.random()*1000+500;
-        vertex.z = Math.random()*500;
-        snowGeometry.vertices.push( vertex );
-    }
-    var snowMaterial = new THREE.PointsMaterial({
-        size: 3,
-        transparent: true,
-        opacity: 0.8,
-        map: snowTexture,
-        blending: THREE.AdditiveBlending,
-        depthTest: false, 
-    });
-
+  snowGeometry = new THREE.Geometry();
+  // var snowSpriteGroup = new THREE.Group();
+  var textureLoader = new THREE.TextureLoader();
+  var snowTexture = textureLoader.load( "textures/cold.png" );
+  var range = 1000;
+  for ( i = 0; i < 3000; i ++ ) {
+      var vertex = new THREE.Vector3();
+      vertex.x = Math.random()*range-500;
+      vertex.y = Math.random()*1000+500;
+      vertex.z = Math.random()*500;
+      snowGeometry.vertices.push( vertex );
+  }
+  var snowMaterial = new THREE.PointsMaterial({
+      size: 3,
+      transparent: true,
+      opacity: 0.8,
+      map: snowTexture,
+      blending: THREE.AdditiveBlending,
+      depthTest: false, 
+  });
 
   var snowSpritePoints = new THREE.Points(snowGeometry, snowMaterial);
   snowSpritePoints.position.set(0,0,0);
