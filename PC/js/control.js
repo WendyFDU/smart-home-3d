@@ -6,7 +6,7 @@ var roomLightStates = 0;
 var roomLight;
 var roomGeometry;
 var ctrlConfig = {
-  lightctrl: false,
+  lightctrl: true,
   temperature: 12,
   humidity: 60,
   noise: 30,
@@ -130,11 +130,13 @@ function addComponent ( scene ) {
   //LIGHTS
   roomLight = new THREE.PointLight( 0xffaa00, 0.5, 1000);
   roomLight.position.set( 0, 800, 100 );
+  roomLight.castShadow = true;
   roomGroup.add( roomLight );
   roomGroup.add( new THREE.PointLightHelper( roomLight, 5 ) );
 
   sunLight = new THREE.DirectionalLight( 0xffffff, 0.5);
   sunLight.position.set( 0, 1000, 2000 );
+  sunLight.castShadow = true;
   // sunLight.castShadow = true;
   roomGroup.add(sunLight);
 
@@ -174,36 +176,59 @@ function addComponent ( scene ) {
 	loadOBJ('obj/curtains-poll.obj', humiMaterial, 2, 10, 120, -80, 0, 0, 0, 4);
 	loadOBJ('obj/curtains.obj', materialSofa, 2, 10, 120, -80, 0, 0, 0, 5);
 	addSprite();
-  showTprt();
+  snowSprite();
   // GUI
   gui = new dat.GUI( { width: 250 } );
   var controlGUI = gui.addFolder( "室内状态" );
   controlGUI.add( ctrlConfig, 'lightctrl' ).onChange( function() {
+    if(ctrlConfig.lightctrl == true) {
+      roomLight.intensity = 1;
+    } else {
+      roomLight.intensity = 0;
+    }
     // shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
   });
-  controlGUI.add( ctrlConfig, 'temperature', -30, 50 ).onChange( function() {
+  controlGUI.add( ctrlConfig, 'temperature', -10, 40 ).onChange( function() {
     console.log(ctrlConfig.temperature);
-          // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
-          // sunLight.shadow.camera.updateProjectionMatrix();
+    if(ctrlConfig.temperature <= 16) {
+      showSnowSprites();
+      fallSpeed = 1 + (16 - ctrlConfig.temperature)*0.1;
+    }
+    if( ctrlConfig.temperature >= 26) {
+      showSunSprites();
+      fallSpeed = -1 - (ctrlConfig.temperature - 26)*0.2;
+
+    }
+    if( ctrlConfig.temperature > 16 && ctrlConfig.temperature < 26) {
+      showWaterSprites();
+      fallSpeed = (ctrlConfig.temperature - 16)*0.05;
+    }
+    console.log("speed:" + fallSpeed);
   });
-  controlGUI.add( ctrlConfig, 'humidity', 0, 100 ).onChange( function() {
-    console.log(ctrlConfig.humidity);
-          // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
-          // sunLight.shadow.camera.updateProjectionMatrix();
+  controlGUI.add( ctrlConfig, 'humidity', 20, 100 ).onChange( function() {
+    var spriteNum;
+    var humidity = ctrlConfig.humidity;
+    if( humidity <= 45) {
+      spriteNum = (humidity - 20) * 10;
+    }
+    else if( humidity > 45 && humidity < 75 ) {
+      spriteNum = 250 + (humidity - 45) * 40;
+    }
+    else if( humidity > 75) {
+      spriteNum = 1450 + (humidity - 75) * 10;
+    }
+    spriteNum = Math.floor(spriteNum);
+    changeOpacity(spriteNum);
   });
   controlGUI.add( ctrlConfig, 'noise', 0, 100 ).onChange( function() {
     console.log(ctrlConfig.temperature);
-          // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
-          // sunLight.shadow.camera.updateProjectionMatrix();
   });
   controlGUI.add( ctrlConfig, 'light', 1, 3000 ).onChange( function() {
-    console.log(ctrlConfig.temperature);
-          // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
-          // sunLight.shadow.camera.updateProjectionMatrix();
+    sunLight.intensity = (ctrlConfig.light / 3000) * 0.8;
   });
   controlGUI.open();
 
-	update();
+	// update();
 
 	/* ACCELOROMETER PART */  
 	document.addEventListener("deviceready", onDeviceReady, false);  
@@ -235,6 +260,7 @@ function loadOBJ(file, material, scale, xOff, yOff, zOff, xRot, yRot, zRot, mode
     object.rotation.y = yRot;
     object.rotation.z = zRot;
     object.scale.set(scale,scale,scale);
+    object.castShadow = true;
     roomGroup.add(object);
     if (modelIndex == 0) {
       windowFrameOBJ = object;
@@ -362,20 +388,25 @@ function addSprite() {
 }
 
 var snowGeometry;
-function showTprt() {
+var snowSpritePoints;
+var sunTexture;
+var snowTexture;
+var waterTexture;
+
+function snowSprite() {
   snowGeometry = new THREE.Geometry();
   // var snowSpriteGroup = new THREE.Group();
   var textureLoader = new THREE.TextureLoader();
-  var snowTexture = textureLoader.load( "textures/cold.png" );
-  var range = 1000;
-  for ( i = 0; i < 3000; i ++ ) {
+  snowTexture = textureLoader.load( "textures/cold.png" );
+  var range = 800;
+  for ( i = 0; i < 1700; i ++ ) {
       var vertex = new THREE.Vector3();
-      vertex.x = Math.random()*range-500;
-      vertex.y = Math.random()*1000+500;
-      vertex.z = Math.random()*500;
+      vertex.x = Math.random()*range-400;
+      vertex.y = Math.random()*500;
+      vertex.z = Math.random()*500-200;
       snowGeometry.vertices.push( vertex );
   }
-  var snowMaterial = new THREE.PointsMaterial({
+  var sprMaterial = new THREE.PointsMaterial({
       size: 3,
       transparent: true,
       opacity: 0.8,
@@ -383,19 +414,52 @@ function showTprt() {
       blending: THREE.AdditiveBlending,
       depthTest: false, 
   });
+  sunTexture = textureLoader.load( "textures/sun.png" );
+  waterTexture = textureLoader.load( "textures/water.png" );
 
-  var snowSpritePoints = new THREE.Points(snowGeometry, snowMaterial);
+  snowSpritePoints = new THREE.Points(snowGeometry, sprMaterial);
   snowSpritePoints.position.set(0,0,0);
+  
   // snowSpritePoints.rotation.z = -Math.PI/5;
   roomGroup.add(snowSpritePoints);
+
 }
-// function removesprites() {
-//   for ( var i = group.children.length-1; i>=0 ; i-- ) {
-//       var sprite = group.children[ i ];
-//       console.log("removing");
-//       group.remove(sprite);
+// function removeSnowSprites() {
+//   if (snowSprStatus == true) {
+//     roomGroup.remove(snowSpritePoints);
+//     snowSprStatus = false;
 //   }
 // }
+function showSnowSprites() {
+  snowSpritePoints.material.setValues({map: snowTexture});
+  // if (snowSprStatus == false) {
+  //   roomGroup.add(snowSpritePoints);
+  //   snowSprStatus = true;
+  // }
+}
+function showSunSprites() {
+  snowSpritePoints.material.setValues({map: sunTexture});
+}
+function showWaterSprites() {
+  snowSpritePoints.material.setValues({map: waterTexture});
+}
+var SUM = 1700;
+var previousNum = SUM;
+function changeOpacity( num ) {
+  var n;
+  if ( num < previousNum) {
+    for( n = num; n < previousNum; n++) {
+      snowSpritePoints.geometry.vertices[n].y = 1000;
+    }
+  }
+  else if( num > previousNum) {
+    for( n = previousNum; n < num; n++) {
+      snowSpritePoints.geometry.vertices[n].y = Math.random() * 500;
+    }
+  }
+  previousNum = num;
+  snowGeometry.verticesNeedUpdate = true;
+}
 // $.getJSON("http://api.avatardata.cn/Weather/Query?key=8a5fe12b90ae44ef891477f7f15cdde2&cityname=武汉&callback=?", function(result){
 // 	console.log(result.parseJSON())
 //  });
