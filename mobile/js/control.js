@@ -4,13 +4,16 @@ var windowOBJ;
 var watchID = null; 
 var roomLightStates = 0;
 var roomLight;
-var roomGeometry;
+var acGeometry;
 var ctrlConfig = {
-  light: false,
-  humidity: false,
+  light: true,
+  humidity: true,
   AC_on: true,
   AC_temperature: 26,
 };
+// 传给场景的参数
+var temperature = 28;
+var humidity = 50;
 var textureLoader = new THREE.TextureLoader();
 //控制开关灯
 function changeLight() {
@@ -18,22 +21,22 @@ function changeLight() {
    if (bigLightStates == 0) {
     bigLight.color.setHSL( 0xFFffff, 1, 0 );
     bigLightStates = 1;
+    }
+    else if (bigLightStates == 1) {
+      bigLight.color.setHSL( 0xFFffff, 1, 50 );
+      bigLightStates = 0;
+    }
   }
-  else if (bigLightStates == 1) {
-    bigLight.color.setHSL( 0xFFffff, 1, 50 );
-    bigLightStates = 0;
+  else if(groupCount == 1) {
+  	if (roomLightStates == 0) {
+  		roomLight.color.setHSL( 0xFFffff, 1, 0 );
+  		roomLightStates = 1;
+  	}
+  	else if (roomLightStates == 1) {
+  		roomLight.color.setHSL( 0xFFffff, 1, 50 );
+  		roomLightStates = 0;
+  	}
   }
-}
-else if(groupCount == 1) {
-	if (roomLightStates == 0) {
-		roomLight.color.setHSL( 0xFFffff, 1, 0 );
-		roomLightStates = 1;
-	}
-	else if (roomLightStates == 1) {
-		roomLight.color.setHSL( 0xFFffff, 1, 50 );
-		roomLightStates = 0;
-	}
-}
 }
 var roomGroup;
 var groupCount = 0;
@@ -89,7 +92,36 @@ function initRoomGroup() {
   wallRight.receiveShadow = true;
   roomGroup.add( wallRight );
 
+  
+
   addComponent(scene);
+
+  if(temperature <= 16) {
+    showSnowSprites();
+    fallSpeed = 1 + (16 - temperature)*0.1;
+  }
+  if( temperature >= 26) {
+    showSunSprites();
+    fallSpeed = -1 - (temperature - 26)*0.2;
+  }
+  if( temperature > 16 && temperature < 26) {
+    showWaterSprites();
+    fallSpeed = (temperature - 16)*0.05;
+  }
+  var spriteNum;
+  if( humidity <= 45) {
+    spriteNum = (humidity - 20) * 10;
+  }
+  else if( humidity > 45 && humidity < 75 ) {
+    spriteNum = 250 + (humidity - 45) * 40;
+  }
+  else if( humidity > 75) {
+    spriteNum = 1450 + (humidity - 75) * 10;
+  }
+  spriteNum = Math.floor(spriteNum);
+  changeOpacity(spriteNum);
+
+  
 
 }
 initRoomGroup();
@@ -164,7 +196,7 @@ function addComponent ( scene ) {
 
   // addmodel是不带材质 loadobj是带材质 可以改改把addmodle删掉
   loadOBJ('obj/bed1.obj',materialBed, 1, -150, 0, 0, 0, Math.PI/2, 0, -1 );
-  loadOBJ('obj/mirror+chair.obj', materialSofa, 1.2, -170, 70, 150, 0, Math.PI/2, 0, -1);
+  loadOBJ('obj/mirror.obj', materialSofa, 0.1, -220, 0, 150, 0, Math.PI/2, 0, -1);
   loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 150, 0, -Math.PI/2, 0, -1);
   loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 200, 0, -Math.PI/2, 0, -1);
   loadOBJ('obj/humidifier.obj',humiMaterial, 3, -170, 0, 270, 0, Math.PI/2, 0, -1);
@@ -178,28 +210,59 @@ function addComponent ( scene ) {
   loadOBJ('obj/curtains-poll.obj', humiMaterial, 2, 10, 120, -80, 0, 0, 0, 4);
   loadOBJ('obj/curtains.obj', materialSofa, 2, 10, 120, -80, 0, 0, 0, 5);
   addSprite();
-  showTprt();
+  snowSprite();
+  humiSprite();
   // 控制台 GUI
   gui = new dat.GUI( { width: 250 } );
   var controlGUI = gui.addFolder( "室内状态" );
   controlGUI.add( ctrlConfig, 'light' ).onChange( function() {
+    if(ctrlConfig.light == true) {
+      roomLight.intensity = 1;
+    } else {
+      roomLight.intensity = 0;
+    }
     // shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
   });
   controlGUI.add( ctrlConfig, 'humidity' ).onChange( function() {
+    if(ctrlConfig.humidity == true) {
+      readdHumiSprite();
+    } else {
+      removeHumiSprite();
+    }
     // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
           // sunLight.shadow.camera.updateProjectionMatrix();
-        });
+  });
   controlGUI.add( ctrlConfig, 'AC_on' ).onChange( function() {
-          // sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
-          // sunLight.shadow.camera.updateProjectionMatrix();
-        });
+    if(ctrlConfig.AC_on == true) {
+      readdACSprite();
+    } else {
+      removeACSprite();
+    }
+  });
   controlGUI.add( ctrlConfig, 'AC_temperature', 16, 30 ).onChange( function() {
-    console.log(ctrlConfig.temperature);
+    console.log(ctrlConfig.AC_temperature);
+    if( temperature > ctrlConfig.AC_temperature) {
+      acColdSprite();
+    } else {
+      acWarmSprite();
+    }
+    // if(temperature <= 16) {
+    //   showSnowSprites();
+    //   fallSpeed = 1 + (16 - temperature)*0.1;
+    // }
+    // if( temperature >= 26) {
+    //   showSunSprites();
+    //   fallSpeed = -1 - (temperature - 26)*0.2;
+
+    // }
+    // if( temperature > 16 && temperature < 26) {
+    //   showWaterSprites();
+    //   fallSpeed = (temperature - 16)*0.05;
+    // }
   });
   controlGUI.open();
 
   update();
-
   /* ACCELOROMETER PART */  
   document.addEventListener("deviceready", onDeviceReady, false);  
 }
@@ -324,22 +387,26 @@ $('canvas').dblclick(function () {
   renderer.render( scene, camera );
 })
 //添加空调的粒子系统
+var roomColdSpriteTetr;
+var roomWarmSpriteTetr;
+var roomColdParticles;
 function addSprite() {
   temp = 0.01;
   rad = 0;
-  roomGeometry = new THREE.Geometry();
+  acGeometry = new THREE.Geometry();
   var coldSpriteGroup = new THREE.Group();
   coldSpriteGroup.name = "coldSprite";
-  var roomColdSprite = textureLoader.load( "textures/sun.png" );
+  roomColdSpriteTetr = textureLoader.load( "textures/cold.png" );
+  roomWarmSpriteTetr = textureLoader.load( "textures/sun.png" );
   for ( i = 0; i < 200; i ++ ) {
     var vertex = new THREE.Vector3();
-    vertex.x = Math.random()*30+80;
-    vertex.y = Math.random()*30+150;
-    vertex.z = Math.random()*20+100;
-    roomGeometry.vertices.push( vertex );
+    vertex.x = Math.random()*30;
+    vertex.y = Math.random()*30;
+    vertex.z = Math.random()*20;
+    acGeometry.vertices.push( vertex );
   }
   parameters = [
-  [ [1, 1, 1], roomColdSprite, 3 ],
+  [ [1, 1, 1], roomColdSpriteTetr, 3 ],
   ];
   for ( i = 0; i < parameters.length; i ++ ) {
     color  = parameters[i][0];
@@ -347,40 +414,138 @@ function addSprite() {
     size   = parameters[i][2];
     materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent : true ,opacity:0.6} );
     materials[i].color.setHSL( color[0], color[1], color[2] );
-    var roomColdParticles = new THREE.Points( roomGeometry, materials[i] );
-      // roomColdParticles.rotation.x = Math.random() * 6;
-      // roomColdParticles.rotation.y = Math.random() * 6;
-      // roomColdParticles.rotation.z = Math.random() * 6;
-      coldSpriteGroup.add( roomColdParticles );
-    }
-    roomGroup.add(coldSpriteGroup);
+    roomColdParticles = new THREE.Points( acGeometry, materials[i] );
+    roomColdParticles.position.set(70,130,30);
+    coldSpriteGroup.name = "ac";
+    coldSpriteGroup.add( roomColdParticles );
+  }
+
+  roomGroup.add(coldSpriteGroup);
+}
+function acColdSprite() {
+  roomColdParticles.material.setValues({map: roomColdSpriteTetr});
+}
+function acWarmSprite() {
+  roomColdParticles.material.setValues({map: roomWarmSpriteTetr});
+}
+function removeACSprite() {
+  roomColdParticles.position.set(70,700,30);
+
+  // roomColdParticles.geometry.vertices.forEach(function (v) {
+  //   v.y = 1000;
+  // });
+  acGeometry.verticesNeedUpdate = true;
+
+}
+function readdACSprite() {
+  roomColdParticles.position.set(70,130,30);
+  acGeometry.verticesNeedUpdate = true;
+}
+function removeHumiSprite() {
+  humiSpritePoints.position.set(0,1000,0);
+  humiGeometry.verticesNeedUpdate = true;
+}
+function readdHumiSprite() {
+  humiSpritePoints.position.set(0,0,0);
+  humiGeometry.verticesNeedUpdate = true;
 }
 //添加雪花的粒子系统 室内温度和湿度
-var snowGeometry;
-function showTprt() {
-  snowGeometry = new THREE.Geometry();
-  var textureLoader = new THREE.TextureLoader();
-  var snowTexture = textureLoader.load( "textures/cold.png" );
-  var range = 1000;
-  for ( i = 0; i < 3000; i ++ ) {
-    var vertex = new THREE.Vector3();
-    vertex.x = Math.random()*range-500;
-    vertex.y = Math.random()*1000+500;
-    vertex.z = Math.random()*500;
-    snowGeometry.vertices.push( vertex );
-  }
-  var snowMaterial = new THREE.PointsMaterial({
-    size: 3,
-    transparent: true,
-    opacity: 0.8,
-    map: snowTexture,
-    blending: THREE.AdditiveBlending,
-    depthTest: false, 
-  });
 
-  var snowSpritePoints = new THREE.Points(snowGeometry, snowMaterial);
+var snowGeometry;
+var snowSpritePoints;
+var sunTexture;
+var snowTexture;
+var waterTexture;
+
+function snowSprite() {
+  snowGeometry = new THREE.Geometry();
+  // var snowSpriteGroup = new THREE.Group();
+  var textureLoader = new THREE.TextureLoader();
+  snowTexture = textureLoader.load( "textures/cold.png" );
+  var range = 800;
+  for ( i = 0; i < 1700; i ++ ) {
+      var vertex = new THREE.Vector3();
+      vertex.x = Math.random()*range-400;
+      vertex.y = Math.random()*500;
+      vertex.z = Math.random()*500-200;
+      snowGeometry.vertices.push( vertex );
+  }
+  var sprMaterial = new THREE.PointsMaterial({
+      size: 3,
+      transparent: true,
+      opacity: 0.8,
+      map: snowTexture,
+      blending: THREE.AdditiveBlending,
+      depthTest: false, 
+  });
+  sunTexture = textureLoader.load( "textures/sun.png" );
+  waterTexture = textureLoader.load( "textures/water.png" );
+
+  snowSpritePoints = new THREE.Points(snowGeometry, sprMaterial);
   snowSpritePoints.position.set(0,0,0);
+  
+  // snowSpritePoints.rotation.z = -Math.PI/5;
   roomGroup.add(snowSpritePoints);
+
+}
+function showSnowSprites() {
+  snowSpritePoints.material.setValues({map: snowTexture});
+  // if (snowSprStatus == false) {
+  //   roomGroup.add(snowSpritePoints);
+  //   snowSprStatus = true;
+  // }
+}
+function showSunSprites() {
+  snowSpritePoints.material.setValues({map: sunTexture});
+}
+function showWaterSprites() {
+  snowSpritePoints.material.setValues({map: waterTexture});
+}
+var SUM = 1700;
+var previousNum = SUM;
+function changeOpacity( num ) {
+  var n;
+  if ( num < previousNum) {
+    for( n = num; n < previousNum; n++) {
+      snowSpritePoints.geometry.vertices[n].y = 1000;
+    }
+  }
+  else if( num > previousNum) {
+    for( n = previousNum; n < num; n++) {
+      snowSpritePoints.geometry.vertices[n].y = Math.random() * 500;
+    }
+  }
+  previousNum = num;
+  snowGeometry.verticesNeedUpdate = true;
+}
+
+var humiSpritePoints;
+function humiSprite() {
+  humiGeometry = new THREE.Geometry();
+  // var snowSpriteGroup = new THREE.Group();
+  var textureLoader = new THREE.TextureLoader();
+  humiTexture = textureLoader.load( "textures/water.png" );
+  for ( i = 0; i < 500; i ++ ) {
+      var vertex = new THREE.Vector3();
+      vertex.x = Math.random()*15-180;
+      vertex.y = Math.random()*15+135;
+      vertex.z = Math.random()*15+270;
+      humiGeometry.vertices.push( vertex );
+  }
+  var humiMaterial = new THREE.PointsMaterial({
+      size: 1,
+      transparent: true,
+      opacity: 0.3,
+      map: humiTexture,
+      blending: THREE.AdditiveBlending,
+      depthTest: false, 
+  });
+  humiSpritePoints = new THREE.Points(humiGeometry, humiMaterial);
+  // humiSpritePoints.position.set(-180,130,275);
+  var humiSpriteGroup = new THREE.Group();
+  humiSpriteGroup.add(humiSpritePoints)
+  humiSpriteGroup.name = "humi";
+  roomGroup.add(humiSpriteGroup);
 }
 // function removesprites() {
 //   for ( var i = group.children.length-1; i>=0 ; i-- ) {

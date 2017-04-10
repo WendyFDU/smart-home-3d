@@ -162,7 +162,7 @@ function addComponent ( scene ) {
   var humiMaterial = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureHumi } );
 
 	loadOBJ('obj/bed1.obj',materialBed, 1, -150, 0, 0, 0, Math.PI/2, 0, -1 );
-	loadOBJ('obj/mirror+chair.obj', materialSofa, 1.2, -170, 70, 150, 0, Math.PI/2, 0, -1);
+	loadOBJ('obj/mirror.obj', materialSofa, 0.1, -220, 0, 150, 0, Math.PI/2, 0, -1);
 	loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 150, 0, -Math.PI/2, 0, -1);
   loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 200, 0, -Math.PI/2, 0, -1);
 	loadOBJ('obj/humidifier.obj',humiMaterial, 3, -170, 0, 270, 0, Math.PI/2, 0, -1);
