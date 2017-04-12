@@ -1,0 +1,19 @@
+#ctrl-panel {
+  width: 350px;
+  height: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 500px;
+}
+
+#ctrl-sliding-window {
+  margin-left: 3px;
+}
+
+.ctrl-bt {
+  width: 40px;
+  height: 40px;
+  margin-left: 0px;
+  border: 3px dotted #eeeeee;
+}

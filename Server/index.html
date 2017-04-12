@@ -1,0 +1,19 @@
+<html>
+<head>
+	<script src="socket.io.js"></script>
+	<script>
+  		var socket = io('http://192.168.1.105:8080');
+  		setInterval("sendReq()", 1000);
+
+  		function sendReq() {
+  			socket.emit('PC to server', { msg: 'From PC: Accelerometer data request' });
+  		}
+
+  		socket.on('server to PC', function (data) {
+    		console.log(data);
+  		});
+	</script>
+</head>
+<body>
+</body>
+</html>

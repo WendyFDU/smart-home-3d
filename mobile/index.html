@@ -13,10 +13,21 @@
 				overflow: hidden;
 			}
 		</style>
-		<link href="css/button.css" rel="stylesheet" type="text/css"> 
+		<link href="css/ctrl-panel.css" rel="stylesheet" type="text/css"> 
+
 	</head>
 
 	<body>
+		<div id="ctrl-panel">
+	      <img id="ctrl-sliding-window" class="ctrl-bt" src="img/bt-sliding-window-off.png" onclick="ctrlSlidingWindow()" />
+	      <img id="ctrl-casement-window" class="ctrl-bt" src="img/bt-casement-window-off.png" onclick="ctrlCasementWindow()" />
+	      <img id="ctrl-curtains" class="ctrl-bt" src="img/bt-curtains-off.png" onclick="ctrlCurtains()" />
+	      <img id="ctrl-light" class="ctrl-bt" src="img/bt-light-off.png" onclick="ctrlLight()" />
+	      <img id="ctrl-aircon" class="ctrl-bt" src="img/bt-aircon-off.png" onclick="ctrlAircon()" />
+	      <img id="ctrl-humidifier" class="ctrl-bt" src="img/bt-humidifier-off.png" onclick="ctrlHumidifier()" />
+	    </div>
+		
+		<div id="canvas"></div>
 		<script src="js/three.js"></script>
 
 		<script src="js/three/loaders/DDSLoader.js"></script>
@@ -28,32 +39,12 @@
 		<script src="js/jquery.js"></script>
 		<script src="js/KeyboardState.js"></script>
 		<script src="js/OrbitControls.js"></script>
-
-		
-		<div id="canvas"></div>
-		<section  class="clearfix">
-	    	<section id="content" class="light-buttons">
-	  			<div >
-		    		<!-- <a class="button lightbg-blue clearfix" id="btn_change_light" onclick="changeLight()">	<span class="button_span">开顶灯</span>
-	    			</a>  -->
-	    			<a class="button lightbg-pink clearfix" id="btn_change" onclick="changeScene()"><span class="button_span">切换场景</span>
-	    			</a> 
-	    		</div>
-	    	</section>
-		</section>
-		<!-- <div>
-			<button id="btn_change_light" onclick="changeLight()" >关顶灯</button>
-		</div>
-		<div>
-			<button id="btn_change_light" onclick="changeScene()" >切换模型</button>
-		</div> -->
 		<script src="js/hmac-sha1.js"></script>
 		<script src="js/enc-base64.js"></script>
 		<script type="text/javascript" src="cordova.js"></script>
 	     <script type="text/javascript">
 	         app.initialize();
 	     </script>
-		<script src="js/model.js"></script>
 		<script src="js/control.js"></script>
 
 
