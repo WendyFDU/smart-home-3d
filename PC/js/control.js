@@ -1,42 +1,152 @@
 var bgStates = 0;
-var bigLightStates = 0;
-var windowOBJ;
 var watchID = null; 
-var roomLightStates = 0;
 var roomLight;
-var roomGeometry;
+var acGeometry;
 var ctrlConfig = {
   lightctrl: true,
-  temperature: 12,
-  humidity: 60,
+  temperature: 16,
+  humidity: 40,
   noise: 30,
   light: 2000,
 };
+var deviceStat = {
+  windowStat: 1.0,
+  curtainStat: 1.0,
+  lightStat: 0,
+  airconStat: 0,
+  humidifierStat: 0
+};
 var textureLoader = new THREE.TextureLoader();
-function changeLight() {
-	if(groupCount == 0) {
-		if (bigLightStates == 0) {
-			bigLight.color.setHSL( 0xFFffff, 1, 0 );
-			bigLightStates = 1;
-		}
-		else if (bigLightStates == 1) {
-			bigLight.color.setHSL( 0xFFffff, 1, 50 );
-			bigLightStates = 0;
-		}
-	}
-	else if(groupCount == 1) {
-		if (roomLightStates == 0) {
-			roomLight.color.setHSL( 0xFFffff, 1, 0 );
-			roomLightStates = 1;
-		}
-		else if (roomLightStates == 1) {
-			roomLight.color.setHSL( 0xFFffff, 1, 50 );
-			roomLightStates = 0;
-		}
-	}
+
+var container, stats;
+var materials = [];
+
+
+var camera, scene, renderer;
+
+var mouseX = 0, mouseY = 0;
+
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = window.innerHeight / 2;
+
+var sunLight, sunLight2, sunLight3, bigLight;
+
+var group;
+
+var raycaster;
+var mouse = new THREE.Vector2();
+var snowSpritePoints;
+var fallSpeed = 1;
+
+var windowLeftOBJ;
+var windowRightOBJ;
+var curtainOBJ;
+
+var socket;
+
+
+init();
+animate();
+
+function init() {
+  var canvasdiv = document.getElementById("canvas");
+
+  container = document.createElement( 'div' );
+  canvasdiv.appendChild( container );
+
+  scene = new THREE.Scene();
+  group = new THREE.Group();
+
+  camera = new THREE.PerspectiveCamera( 90, window.innerWidth / (window.innerHeight), 2, 10000 );
+  // camera.position.z = 45;
+  // camera.position.y = 0;
+  camera.position.set( -150, 120, 450 );
+
+  // camera.position.x = 0;
+  camera.up.x = 0;//设置相机的上为「x」轴方向
+  camera.up.y = 1;//设置相机的上为「y」轴方向
+  camera.up.z = 0;//设置相机的上为「z」轴方向
+  // camera.lookAt( {x:0, y:-10, z:0 } );
+  // camera.position.set(0,15,40);
+  camera.lookAt(scene.position); 
+  renderer = new THREE.WebGLRenderer();
+  renderer.setClearColor(0x000000); // white background colour
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.sortObjects = false;
+  renderer.shadowMapEnabled = true;
+  container.appendChild( renderer.domElement );
+
+  // stats = new Stats();
+  // container.appendChild( stats.dom );
+  var controls = new THREE.OrbitControls(camera);
+  controls.damping = 0.2;
+
+  initRoomGroup();
+  scene.add(roomGroup);
+
+  socket = io('http://192.168.1.105:8080');
+  setInterval("sendReq()", 100);
+
+  socket.on('server to PC', function (data) {
+    console.log(data);
+    deviceStat.windowStat = data.windowStat;
+    deviceStat.curtainStat = data.curtainStat;
+    deviceStat.lightStat = data.lightStat;
+    deviceStat.airconStat = data.airconStat;
+    deviceStat.humidifierStat = data.humidifierStat;
+    modifyDeviceStat();
+  });
 }
+
+function modifyDeviceStat() {
+  // Move window
+  if (windowLeftOBJ != undefined) {
+    windowLeftOBJ.position.x = 80 - 70 * deviceStat.windowStat;
+  }
+
+  // Move curtains
+  if (curtainOBJ != undefined) {
+    curtainOBJ.scale.x = deviceStat.curtainStat * 2.5;
+    curtainOBJ.position.x = 85 - 75 * deviceStat.curtainStat;
+  }
+
+  if (deviceStat.lightStat == 0) {
+    // Turn off light
+    roomLight.intensity = 0;
+  }
+  else if (deviceStat.lightStat == 1) {
+    // Turn on light
+    roomLight.intensity = 1;
+  }
+  if (deviceStat.airconStat == 0) {
+    // Turn off air-con
+    removeACSprite();
+  }
+  else if (deviceStat.airconStat == 1) {
+    // Turn on air-con
+    readdACSprite();
+  }
+  if (deviceStat.humidifierStat == 0) {
+    // Turn off humidifier
+    removeHumiSprite();
+  }
+  else if (deviceStat.humidifierStat == 1) {
+    // Turn on humidifier
+    readdHumiSprite();
+  }
+}
+
+function sendReq() {
+  socket.emit('PC to server', { 
+    temperature: ctrlConfig.temperature,
+    humidity: ctrlConfig.humidity,
+    noise: ctrlConfig.noise,
+    light: ctrlConfig.light 
+  });
+}
+
 var roomGroup;
-var groupCount = 0;
 function initRoomGroup() {
 	roomGroup = new THREE.Group();
 
@@ -48,7 +158,7 @@ function initRoomGroup() {
   textureSquares.format = THREE.RGBFormat;
   // GROUND
   var groundMaterial = new THREE.MeshPhongMaterial( {
-    shininess: 80,
+    shininess: 0,
     color: 0xffffff,
     specular: 0xffffff,
     map: textureSquares
@@ -83,29 +193,14 @@ function initRoomGroup() {
   wallLeft.position.set( -300, 0, 0 );
   wallLeft.scale.set( 10, 10, 10 );
   wallLeft.receiveShadow = true;
-  roomGroup.add( wallLeft );
+  // roomGroup.add( wallLeft );
   var wallRight = new THREE.Mesh( wallGeometry, wallMaterial );
   wallRight.position.set( 200, 0, 0 );
   wallRight.scale.set( 10, 10, 10 );
   wallRight.receiveShadow = true;
-  roomGroup.add( wallRight );
+  // roomGroup.add( wallRight );
 
   addComponent(scene);
-}
-initRoomGroup();
-function changeScene() {
-	if(groupCount == 0) {
-		groupCount = 1;
-		scene.remove(group);
-		scene.add(roomGroup);
-		renderer.setClearColor(0xebebeb);
-	} 
-	else if (groupCount == 1) {
-		groupCount = 0;
-		scene.remove(roomGroup);
-		scene.add(group);
-		renderer.setClearColor(0x000000);
-	}
 }
 
 var loader;
@@ -161,8 +256,8 @@ function addComponent ( scene ) {
   textureHumi.format = THREE.RGBFormat;
   var humiMaterial = new THREE.MeshPhongMaterial( { shininess:5, color: 0xffffff, specular: 0xFFffff, map: textureHumi } );
 
-	loadOBJ('obj/bed1.obj',materialBed, 1, -150, 0, 0, 0, Math.PI/2, 0, -1 );
-	loadOBJ('obj/mirror.obj', materialSofa, 0.1, -220, 0, 150, 0, Math.PI/2, 0, -1);
+	loadOBJ('obj/bed1.obj',materialBed, 0.9, -100, 0, 0, 0, Math.PI/2, 0, -1 );
+	loadOBJ('obj/mirror.obj', materialSofa, 0.09, -170, 0, 180, 0, Math.PI/2, 0, -1);
 	loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 150, 0, -Math.PI/2, 0, -1);
   loadOBJ('obj/sofa1.obj', materialSofa, 0.6, 80, 35, 200, 0, -Math.PI/2, 0, -1);
 	loadOBJ('obj/humidifier.obj',humiMaterial, 3, -170, 0, 270, 0, Math.PI/2, 0, -1);
@@ -173,21 +268,22 @@ function addComponent ( scene ) {
 	loadOBJ('obj/window-frame.obj', humiMaterial, 0.08, 10, 150, -80, 0, 0, 0, 0);
 	loadOBJ('obj/window-right.obj', windowMaterial, 0.08, 10, 150, -80, 0, 0, 0, 1);
 	loadOBJ('obj/window-left.obj', windowMaterial, 0.08, 10, 150, -80, 0, 0, 0, 2);
-	loadOBJ('obj/curtains-poll.obj', humiMaterial, 2, 10, 120, -80, 0, 0, 0, 4);
-	loadOBJ('obj/curtains.obj', materialSofa, 2, 10, 120, -80, 0, 0, 0, 5);
+	loadOBJ('obj/curtains-poll.obj', humiMaterial, 2, 10, 140, -90, 0, 0, 0, 4);
+	loadOBJ('obj/curtains.obj', materialSofa, 2.5, 10, 160, -90, 0, 0, 0, 5);
 	addSprite();
   snowSprite();
+  humiSprite();
   // GUI
   gui = new dat.GUI( { width: 250 } );
   var controlGUI = gui.addFolder( "室内状态" );
-  controlGUI.add( ctrlConfig, 'lightctrl' ).onChange( function() {
-    if(ctrlConfig.lightctrl == true) {
-      roomLight.intensity = 1;
-    } else {
-      roomLight.intensity = 0;
-    }
-    // shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
-  });
+  // controlGUI.add( ctrlConfig, 'lightctrl' ).onChange( function() {
+  //   if(ctrlConfig.lightctrl == true) {
+  //     roomLight.intensity = 1;
+  //   } else {
+  //     roomLight.intensity = 0;
+  //   }
+  //   // shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
+  // });
   controlGUI.add( ctrlConfig, 'temperature', -10, 40 ).onChange( function() {
     console.log(ctrlConfig.temperature);
     if(ctrlConfig.temperature <= 16) {
@@ -231,7 +327,7 @@ function addComponent ( scene ) {
 	// update();
 
 	/* ACCELOROMETER PART */  
-	document.addEventListener("deviceready", onDeviceReady, false);  
+	// document.addEventListener("deviceready", onDeviceReady, false);  
 }
 
 // LOAD OBJECT
@@ -276,6 +372,7 @@ function loadOBJ(file, material, scale, xOff, yOff, zOff, xRot, yRot, zRot, mode
     }
     else if (modelIndex == 5) {
       curtainOBJ = object;
+      curtainOBJ.scale.set(scale, 1.5, scale);
     } 
 
   }, onProgress, onError);
@@ -287,58 +384,58 @@ function update() {
   renderer.render(scene, camera);
 }
 
-function onDeviceReady() {  
-    startWatch(); 
-}
+// function onDeviceReady() {  
+//     startWatch(); 
+// }
 
-function startWatch() { 
-    var options = { frequency: 40 };  
-    watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);     
-} 
+// function startWatch() { 
+//     var options = { frequency: 40 };  
+//     watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);     
+// } 
 
-function stopWatch() {         
-    if (watchID) { 
-        navigator.accelerometer.clearWatch(watchID); 
-        watchID = null;         
-   }     
-}  
+// function stopWatch() {         
+//     if (watchID) { 
+//         navigator.accelerometer.clearWatch(watchID); 
+//         watchID = null;         
+//    }     
+// }  
 
-function onSuccess(acceleration) {
-    // var eleAcce = document.getElementById('acceleration');
-    // eleAcce.innerHTML = 'X Axis Acceleration: ' + acceleration.x + '<br />' +
-    //     'Y Axis Acceleration: ' + acceleration.y + '<br />' +
-    //     'Z Axis Acceleration: ' + acceleration.z;
+// function onSuccess(acceleration) {
+//     // var eleAcce = document.getElementById('acceleration');
+//     // eleAcce.innerHTML = 'X Axis Acceleration: ' + acceleration.x + '<br />' +
+//     //     'Y Axis Acceleration: ' + acceleration.y + '<br />' +
+//     //     'Z Axis Acceleration: ' + acceleration.z;
     
-    // Move window
-    windowLeftOBJ.position.x -= acceleration.x / 20.0;
-    if (windowLeftOBJ.position.x < 0) {
-      windowLeftOBJ.position.x = 0;
-    }
-    if (windowLeftOBJ.position.x > 7.2) {
-      windowLeftOBJ.position.x = 7.2;
-    }
+//     // Move window
+//     windowLeftOBJ.position.x -= acceleration.x / 20.0;
+//     if (windowLeftOBJ.position.x < 0) {
+//       windowLeftOBJ.position.x = 0;
+//     }
+//     if (windowLeftOBJ.position.x > 7.2) {
+//       windowLeftOBJ.position.x = 7.2;
+//     }
 
-    // Draw curtains
-    curtainOBJ.scale.x += acceleration.x / 500.0;
-    curtainOBJ.position.x -= acceleration.x / 18;
-    if (curtainOBJ.scale.x > 0.12) {
-      curtainOBJ.scale.x = 0.12;
-    }
-    if (curtainOBJ.scale.x < 0) {
-      curtainOBJ.scale.x = 0;
-    }
+//     // Draw curtains
+//     curtainOBJ.scale.x += acceleration.x / 500.0;
+//     curtainOBJ.position.x -= acceleration.x / 18;
+//     if (curtainOBJ.scale.x > 0.12) {
+//       curtainOBJ.scale.x = 0.12;
+//     }
+//     if (curtainOBJ.scale.x < 0) {
+//       curtainOBJ.scale.x = 0;
+//     }
 
-    if (curtainOBJ.position.x > 3.3) {
-      curtainOBJ.position.x = 3.3;
-    }
-    if (curtainOBJ.position.x < 0) {
-      curtainOBJ.position.x = 0;
-    }
-}
+//     if (curtainOBJ.position.x > 3.3) {
+//       curtainOBJ.position.x = 3.3;
+//     }
+//     if (curtainOBJ.position.x < 0) {
+//       curtainOBJ.position.x = 0;
+//     }
+// }
 
-function onError(accelerometerError) {
-    alert('Accelerometer Error: ' + accelerometerError.code);
-}
+// function onError(accelerometerError) {
+//     alert('Accelerometer Error: ' + accelerometerError.code);
+// }
 
 
 
@@ -359,34 +456,44 @@ $('canvas').dblclick(function () {
 function addSprite() {
   temp = 0.01;
   rad = 0;
-	roomGeometry = new THREE.Geometry();
-	var coldSpriteGroup = new THREE.Group();
-  coldSpriteGroup.name = "coldSprite";
-  var roomColdSprite = textureLoader.load( "textures/cold.png" );
-  for ( i = 0; i < 300; i ++ ) {
-      var vertex = new THREE.Vector3();
-      vertex.x = Math.random()*30+80;
-      vertex.y = Math.random()*20+150;
-      vertex.z = Math.random()*20+100;
-      roomGeometry.vertices.push( vertex );
+  acGeometry = new THREE.Geometry();
+  var coldSpriteGroup = new THREE.Group();
+  roomColdSpriteTetr = textureLoader.load( "textures/cold.png" );
+  roomWarmSpriteTetr = textureLoader.load( "textures/sun.png" );
+  for ( i = 0; i < 200; i ++ ) {
+    var vertex = new THREE.Vector3();
+    vertex.x = Math.random()*30+70;
+    vertex.y = Math.random()*30+120;
+    vertex.z = Math.random()*20+15;
+    acGeometry.vertices.push( vertex );
   }
   parameters = [
-       [ [0.5, 0.5, 0.5], roomColdSprite, 2 ],
+  [ [1, 1, 1], roomColdSpriteTetr, 3 ],
   ];
   for ( i = 0; i < parameters.length; i ++ ) {
-      color  = parameters[i][0];
-      sprite = parameters[i][1];
-      size   = parameters[i][2];
-      materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent : true } );
-      materials[i].color.setHSL( color[0], color[1], color[2] );
-      var roomColdParticles = new THREE.Points( roomGeometry, materials[i] );
-      // roomColdParticles.rotation.x = Math.random() * 6;
-      // roomColdParticles.rotation.y = Math.random() * 6;
-      // roomColdParticles.rotation.z = Math.random() * 6;
-      coldSpriteGroup.add( roomColdParticles );
+    color  = parameters[i][0];
+    sprite = parameters[i][1];
+    size   = parameters[i][2];
+    materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: false, transparent : true ,opacity:0.6} );
+    materials[i].color.setHSL( color[0], color[1], color[2] );
+    roomColdParticles = new THREE.Points( acGeometry, materials[i] );
+    // roomColdParticles.position.set(70,130,30);
+    coldSpriteGroup.name = "ac";
+    coldSpriteGroup.add( roomColdParticles );
   }
-}
 
+  roomGroup.add(coldSpriteGroup);
+  // removeACSprite();
+}
+function removeACSprite() {
+  roomColdParticles.position.set(0,1000,0);
+  acGeometry.verticesNeedUpdate = true;
+
+}
+function readdACSprite() {
+  roomColdParticles.position.set(0,0,0);
+  acGeometry.verticesNeedUpdate = true;
+}
 var snowGeometry;
 var snowSpritePoints;
 var sunTexture;
@@ -460,6 +567,182 @@ function changeOpacity( num ) {
   previousNum = num;
   snowGeometry.verticesNeedUpdate = true;
 }
+var humiSpritePoints;
+function humiSprite() {
+  humiGeometry = new THREE.Geometry();
+  // var snowSpriteGroup = new THREE.Group();
+  var textureLoader = new THREE.TextureLoader();
+  humiTexture = textureLoader.load( "textures/water.png" );
+  for ( i = 0; i < 500; i ++ ) {
+      var vertex = new THREE.Vector3();
+      vertex.x = Math.random()*15-180;
+      vertex.y = Math.random()*15+135;
+      vertex.z = Math.random()*15+270;
+      humiGeometry.vertices.push( vertex );
+  }
+  var humiMaterial = new THREE.PointsMaterial({
+      size: 1,
+      transparent: true,
+      opacity: 0.3,
+      map: humiTexture,
+      blending: THREE.AdditiveBlending,
+      depthTest: false, 
+  });
+  humiSpritePoints = new THREE.Points(humiGeometry, humiMaterial);
+  // humiSpritePoints.position.set(-180,130,275);
+  var humiSpriteGroup = new THREE.Group();
+  humiSpriteGroup.add(humiSpritePoints)
+  humiSpriteGroup.name = "humi";
+  roomGroup.add(humiSpriteGroup);
+  // removeHumiSprite();
+}
+function removeHumiSprite() {
+  humiSpritePoints.position.set(0,1000,0);
+  humiGeometry.verticesNeedUpdate = true;
+}
+function readdHumiSprite() {
+  humiSpritePoints.position.set(0,0,0);
+  humiGeometry.verticesNeedUpdate = true;
+}
+
+
+function animate() {
+
+  requestAnimationFrame( animate );
+  // stats.begin();
+  render();
+  // stats.end();
+  // stats.update();
+}
+var rotateAxis = new THREE.Vector3(100,50,0)
+var radIncrement;
+var rad;
+
+function render() {
+  radIncrement = 0.0001;
+  rad = 0;
+  var time = Date.now() * 0.00005;
+
+  // camera.position.x += ( mouseX - camera.position.x ) ;
+  // camera.position.y += ( - mouseY - camera.position.y ) ;
+  // camera.updateMatrixWorld();
+
+  // raycaster.setFromCamera( mouse, camera );
+
+
+  // // calculate objects intersecting the picking ray
+  // var intersects = raycaster.intersectObjects( scene.children );
+
+  // for ( var i = 0; i < intersects.length; i++ ) {
+  //   console.log("get 344 "+i)
+  //   console.log(intersects[i])
+
+  //   // intersects[ i ].object.material.color.set( 0xff0000 );
+
+  // }
+
+  // camera.lookAt( scene.position );
+
+
+  for ( i = 0; i < scene.children.length; i ++ ) {
+
+    var object = scene.children[ i ];
+    if ( object instanceof THREE.Group ) {
+      for ( var j = 0; j < object.children.length; j ++ ) {
+        var object2 = object.children[ j ];
+        if(object2 instanceof THREE.Group) {
+          if(object2.name == "ac") {
+            for (var k = 0; k < object2.children.length; k++) {
+              var object3 = object2.children[ k ];
+              if(object3 instanceof THREE.Points) {
+                var vertices = object3.geometry.vertices;
+                var bias = Math.random()*10+90;
+                vertices.forEach(function (v) {
+                  if(v.z < bias) {
+                    v.z = v.z + 1;
+                  }
+                  if (v.z >= bias) v.z = Math.random()*30+15;
+                });
+                acGeometry.verticesNeedUpdate = true;
+                // var vertices = object3.geometry.vertices;
+                // vertices.forEach(function (v) {
+                //   rad += radIncrement;
+                //   v.rotateOnAxis(new THREE.Vector3(-400,-200,-200).normalize(), 0.075)
+                // });
+                // snowGeometry.verticesNeedUpdate = true;
+
+                // rad += radIncrement;
+                // object2.rotateOnAxis(new THREE.Vector3(70,130,60).normalize(), 0.075)
+                // object3.rotation.x = time*10
+              }
+            }
+          }
+          if(object2.name == "humi") {
+            for (var k = 0; k < object2.children.length; k++) {
+              var object3 = object2.children[ k ];
+              if(object3 instanceof THREE.Points) {
+                var vertices = object3.geometry.vertices;
+                var bias = Math.random()*10+160;
+                vertices.forEach(function (v) {
+                  if(v.y < bias) {
+                    v.y = v.y + 1;
+                  }
+                  if (v.y >= bias) v.y = Math.random()*15+135;
+                });
+                humiGeometry.verticesNeedUpdate = true;
+              }
+            }
+          }
+          // object2.rotation.y = time * ( i < 4 ? i + 1 : - ( i + 1 ) );
+        }
+      }
+      
+
+    }
+  }
+
+  for (var i = 0; i < scene.children.length; i++) {
+    var object = scene.children[i];
+    if(object instanceof THREE.Group) {
+      for ( j = 0; j < object.children.length; j ++ ) {
+        var object2 = object.children[ j ];
+        if(object2 instanceof THREE.Points) {
+          var vertices = object2.geometry.vertices;
+          vertices.forEach(function (v) {
+            if(0 < v.y && v.y < 500) {
+              v.y = v.y - fallSpeed;
+            }
+            if ((v.y < 0 && v.y > -100) || (v.y > 500 && v.y < 600)) v.y = Math.random()*500 - 50;
+          });
+          snowGeometry.verticesNeedUpdate = true;
+
+          // object2.position.y -= fallSpeed;
+          // console.log(object2.position.y)
+
+          // if(object2.position.y < -800) {
+          //   console.log("here500!!!!!")
+          //   object2.position.y = 0;
+          // }
+          // object2.rotation.y = time * ( i < 4 ? i + 1 : - ( i + 1 ) );
+        }
+      }
+
+    }
+  };
+
+  // for ( i = 0; i < materials.length; i ++ ) {
+
+  //   color = parameters[i][0];
+
+  //   h = ( 360 * ( color[0] + time ) % 360 ) / 360;
+  //   materials[i].color.setHSL( h, color[1], color[2] );
+
+  // }
+  renderer.render( scene, camera );
+}
+
+
+
 // $.getJSON("http://api.avatardata.cn/Weather/Query?key=8a5fe12b90ae44ef891477f7f15cdde2&cityname=武汉&callback=?", function(result){
 // 	console.log(result.parseJSON())
 //  });
